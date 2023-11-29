@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "571968842149",
+    "project_id": "recetas-flutter-89bf2",
+    "storage_bucket": "recetas-flutter-89bf2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571968842149:android:1c662d164e519538d7a04c",
+        "android_client_info": {
+          "package_name": "com.example.ac7test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmKBqZbnZsPlt0bw4NIG4GuV_OOEuHn18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
