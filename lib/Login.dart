@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -10,11 +11,50 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController _usernameController = TextEditingController();
+  TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  final firebase = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> users = [];
+
+  void cogerUsuarios() async {
+    try {
+      final QuerySnapshot querySnapshot = await firebase.collection("Usuarios").get();
+
+      for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        users.add(data);
+      }
+    } catch (e) {
+      print("Error getting documents: $e");
+    }
+  }
+  bool usuarioExiste(String email, String password) {
+    return users.any((user) => user['Email'] == email && user['Password'] == password);
+  }
+  void mostrarAlerta(BuildContext context, String mensaje) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Alerta'),
+          content: Text(mensaje),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra la alerta
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    cogerUsuarios();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -34,10 +74,10 @@ class _LoginPageState extends State<LoginPage> {
                 child: Align(
                   alignment: Alignment.center,
                   child: TextField(
-                    controller: _usernameController,
+                    controller: _emailController,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      hintText: 'Enter your username',
+                      hintText: 'Enter your email',
                       filled: true,
                       fillColor: Colors.yellow, // Fondo circular amarillo
                       border: OutlineInputBorder(
@@ -74,11 +114,13 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  if(_usernameController.text == 'a'){
+                  if(usuarioExiste(_emailController.text, _passwordController.text)){
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => Recetas()),
                     );
+                  }else{
+                    mostrarAlerta(context, 'Usuario no registrado');
                   }
                 },
                 style: ElevatedButton.styleFrom(

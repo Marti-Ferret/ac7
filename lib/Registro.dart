@@ -152,25 +152,27 @@ class Registro extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-
-                  if (_passwordController.text == _confirmPasswordController.text) {
-
-                    if(!usuarioExiste(_emailController.text)){
-                      mostrarAlerta(context, 'Usuario creado');
-                      registrarUsuario();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginApp()),
-                      );
-                    }else{
-                      mostrarAlerta(context, 'Este email ya esta registrado, usuario no creado');
+                  if(_passwordController.text.isEmpty || _emailController.text.isEmpty){
+                    mostrarAlerta(context, 'La contraseña o el email no puede estar vacio');
+                  }else {
+                    if (_passwordController.text == _confirmPasswordController.text) {
+                      if (!usuarioExiste(_emailController.text)) {
+                        mostrarAlerta(context, 'Usuario creado');
+                        registrarUsuario();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginApp()),
+                        );
+                      } else {
+                        mostrarAlerta(context,
+                            'Este email ya esta registrado, usuario no creado');
+                      }
+                    } else {
+                      mostrarAlerta(context, 'Las contraseñas no coinciden');
                     }
-
-                  } else {
-                    mostrarAlerta(context, 'Las contraseñas no coinciden');
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -179,7 +181,7 @@ class Registro extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20.0),
                   ),
                 ),
-                child: Padding(
+                child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Text(
                     'Registrarse',
