@@ -19,25 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   FirebaseAuth auth = FirebaseAuth.instance;
 
 
-  List<Map<String, dynamic>> users = [];
-
-  void cogerUsuarios() async {
-    try {
-      final QuerySnapshot querySnapshot = await firebase.collection("Usuarios").get();
-
-      for (QueryDocumentSnapshot doc in querySnapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        users.add(data);
-      }
-    } catch (e) {
-      print("Error getting documents: $e");
-    }
-  }
-  bool usuarioExiste(String email, String password) {
-    return users.any((user) => user['Email'] == email && user['Password'] == password);
-  }
   Future<bool> signIn() async {
-
     try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
@@ -45,19 +27,18 @@ class _LoginPageState extends State<LoginPage> {
       );
       return true;
     } on FirebaseAuthException catch (e) {
+      print(e.code);
       if(e.code == "invalid-login-credentials"){
-        mostrarAlerta(context, 'Contraseña o email incorrectos');
-        return false;
+        showAlert(context, 'Contraseña o email incorrectos');
       }else if(e.code == "invalid-email"){
-        mostrarAlerta(context, 'Email invalido');
-        return false;
+        showAlert(context, 'Email invalido');
+      }else if(e.code == "missing-password"){
+        showAlert(context, 'Contraseña incorrecta');
       }
+      return false;
     }
-    return false;
   }
-
-
-  void mostrarAlerta(BuildContext context, String mensaje) {
+  void showAlert(BuildContext context, String mensaje) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -67,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Cierra la alerta
+                Navigator.of(context).pop();
               },
               child: Text('Aceptar'),
             ),
@@ -77,20 +58,19 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Login Page',
+        title: const Text(
+          'Accede',
           textAlign: TextAlign.center,
         ),
         centerTitle: true,
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -102,15 +82,16 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      hintText: 'Enter your email',
+                      hintText: 'Introduce tu email',
                       filled: true,
-                      fillColor: Colors.yellow, // Fondo circular amarillo
+                      fillColor: Colors.yellow,
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.circular(20.0), // Bordes circulares
+                        borderRadius: BorderRadius.circular(20.0),
                       ),
-                      labelStyle: TextStyle(color: Colors.black), // Color de la etiqueta en negro
+                      labelStyle: TextStyle(color: Colors.black),
                     ),
+                    cursorColor: Colors.black,
                   ),
                 ),
               ),
@@ -124,15 +105,16 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: true,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      hintText: 'Enter your password',
+                      hintText: 'Introduce tu contraseña',
                       filled: true,
-                      fillColor: Colors.yellow, // Fondo circular amarillo
+                      fillColor: Colors.yellow,
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.circular(20.0), // Bordes circulares
+                        borderRadius: BorderRadius.circular(20.0),
                       ),
-                      labelStyle: TextStyle(color: Colors.black), // Color de la etiqueta en negro
+                      labelStyle: TextStyle(color: Colors.black),
                     ),
+                    cursorColor: Colors.black,
                   ),
                 ),
               ),
@@ -146,15 +128,15 @@ class _LoginPageState extends State<LoginPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:  Colors.yellow, // Color amarillo
+                  backgroundColor:  Colors.yellow,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0), // Bordes redondos
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Text(
-                    'Login',
+                    'Acceder',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 20.0,

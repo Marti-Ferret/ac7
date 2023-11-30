@@ -1,14 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'Recetas.dart';
 
 class CrearReceta extends StatefulWidget {
-  const CrearReceta({super.key, required this.onRecipeAdded});
-
-  final Function(Receta? reciper) onRecipeAdded;
-
   @override
   State<CrearReceta> createState() => _CrearRecetaState();
 }
@@ -16,14 +11,16 @@ class CrearReceta extends StatefulWidget {
 class _CrearRecetaState extends State<CrearReceta> {
   TextEditingController _recipeNameController = TextEditingController();
   TextEditingController _recipeDescriptionController = TextEditingController();
+  String _selectedCategory = 'Pizza';
   final firebase = FirebaseFirestore.instance;
 
-  void registrarReceta() async {
+  void createRecipe() async {
     try {
       await firebase.collection('Recetas').doc().set(
         {
-          "Email": _recipeNameController.text,
-          "Password": _recipeDescriptionController.text,
+          "Nombre": _recipeNameController.text,
+          "Descripcion": _recipeDescriptionController.text,
+          "Categoria": _selectedCategory,
         },
       );
     } catch (e) {
@@ -41,7 +38,7 @@ class _CrearRecetaState extends State<CrearReceta> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Cierra la alerta
+                Navigator.of(context).pop();
               },
               child: Text('Aceptar'),
             ),
@@ -55,7 +52,7 @@ class _CrearRecetaState extends State<CrearReceta> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Recipe'),
+        title: const Text('Crear receta'),
       ),
       body: SafeArea(
         child: Container(
@@ -66,33 +63,72 @@ class _CrearRecetaState extends State<CrearReceta> {
                 controller: _recipeNameController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Recipe Name',
+                  labelText: 'Nombre de la receta',
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _recipeDescriptionController,
-                maxLines: 5, // Ajusta el número de líneas según tus necesidades
+                maxLines: 5,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Recipe Description',
+                  labelText: 'Descripción de la receta',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedCategory,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCategory = newValue!;
+                    });
+                  },
+                  items: <String>['Pizza', 'Pasta', 'Ensalada','Sopa','Postre','Aperitivo','Otro']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  if(_recipeNameController.text.isNotEmpty && _recipeDescriptionController.text.isNotEmpty){
-                    registrarReceta();
+                  if (_recipeNameController.text.isNotEmpty &&
+                      _recipeDescriptionController.text.isNotEmpty) {
+                    createRecipe();
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => Recetas()),
                     );
-                  }else{
-                    mostrarAlerta(context, "El nombre o descripcion no pueden estar vacios");
+                  } else {
+                    mostrarAlerta(
+                        context, "El nombre o descripción no pueden estar vacíos");
                   }
-
                 },
-                child: const Text('Add Recipe'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.yellow,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Text(
+                    'Crear Receta',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
