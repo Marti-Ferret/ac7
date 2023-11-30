@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'Recetas.dart';
 import 'Registro.dart';
@@ -14,6 +16,9 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   final firebase = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
+
+
   List<Map<String, dynamic>> users = [];
 
   void cogerUsuarios() async {
@@ -31,6 +36,27 @@ class _LoginPageState extends State<LoginPage> {
   bool usuarioExiste(String email, String password) {
     return users.any((user) => user['Email'] == email && user['Password'] == password);
   }
+  Future<bool> signIn() async {
+
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text
+      );
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if(e.code == "invalid-login-credentials"){
+        mostrarAlerta(context, 'Contraseña o email incorrectos');
+        return false;
+      }else if(e.code == "invalid-email"){
+        mostrarAlerta(context, 'Email invalido');
+        return false;
+      }
+    }
+    return false;
+  }
+
+
   void mostrarAlerta(BuildContext context, String mensaje) {
     showDialog(
       context: context,
@@ -54,7 +80,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    cogerUsuarios();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -113,14 +138,11 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  if(usuarioExiste(_emailController.text, _passwordController.text)){
+                onPressed: () async {
+                  if(await signIn()){
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Recetas()),
+                      context, MaterialPageRoute(builder: (context) => Recetas()),
                     );
-                  }else{
-                    mostrarAlerta(context, 'Usuario no registrado');
                   }
                 },
                 style: ElevatedButton.styleFrom(

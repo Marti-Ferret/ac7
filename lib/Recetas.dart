@@ -30,6 +30,7 @@ class Recetas extends StatelessWidget {
           ),
           ],
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
 
     );
