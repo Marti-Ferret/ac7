@@ -1,12 +1,7 @@
-import 'dart:js';
-import 'dart:js_interop';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ac7test/my_app.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-
 
 class Registro extends StatelessWidget {
   TextEditingController _emailController = TextEditingController();
@@ -17,7 +12,8 @@ class Registro extends StatelessWidget {
 
   void cogerUsuarios() async {
     try {
-      final QuerySnapshot querySnapshot = await firebase.collection("Usuarios").get();
+      final QuerySnapshot querySnapshot =
+      await firebase.collection("Usuarios").get();
 
       for (QueryDocumentSnapshot doc in querySnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -27,8 +23,8 @@ class Registro extends StatelessWidget {
       print("Error getting documents: $e");
     }
   }
-  bool usuarioExiste(String email){
 
+  bool usuarioExiste(String email) {
     if (users.any((user) => user['Email'] == email)) {
       return true;
     }
@@ -36,30 +32,31 @@ class Registro extends StatelessWidget {
     return false;
   }
 
-
   void mostrarAlerta(BuildContext context, String mensaje) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Alerta'),
+          title: const Text('Alerta'),
           content: Text(mensaje),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Cierra la alerta
               },
-              child: Text('Aceptar'),
+              child: const Text('Aceptar'),
             ),
           ],
         );
       },
     );
   }
-  int validarNuevoUsuario(String email, String password, String validatePassword){
-    if(_passwordController.text.isEmpty || _emailController.text.isEmpty){
+
+  int validarNuevoUsuario(
+      String email, String password, String validatePassword) {
+    if (_passwordController.text.isEmpty || _emailController.text.isEmpty) {
       return 1;
-    }else {
+    } else {
       if (_passwordController.text == _confirmPasswordController.text) {
         if (!usuarioExiste(_emailController.text)) {
           return 0;
@@ -72,17 +69,19 @@ class Registro extends StatelessWidget {
     }
   }
 
-  void registrarUsuario() async{
-  try{
-    await firebase.collection('Usuarios').doc().set(
-      {
-        "Email": _emailController.text,
-        "Password": _passwordController.text
+  Future<bool> registerUser() async {
+    try {
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text, password: _passwordController.text);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == "invalid-login-credentials") {
+        return false;
+      } else if (e.code == "invalid-email") {
+        return false;
       }
-    );
-  }catch(e){
-    print("Error"+e.toString());
-  }
+    }
+    return false;
   }
 
   @override
@@ -90,7 +89,7 @@ class Registro extends StatelessWidget {
     cogerUsuarios();
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Registro',
           textAlign: TextAlign.center,
         ),
@@ -98,7 +97,7 @@ class Registro extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -113,7 +112,8 @@ class Registro extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Enter your email',
                       filled: true,
-                      fillColor: Colors.yellow, // Fondo circular azul
+                      fillColor: Colors.yellow,
+                      // Fondo circular azul
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
                         borderRadius: BorderRadius.circular(20.0),
@@ -135,7 +135,8 @@ class Registro extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Enter your password',
                       filled: true,
-                      fillColor: Colors.yellow, // Fondo circular azul
+                      fillColor: Colors.yellow,
+                      // Fondo circular azul
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
                         borderRadius: BorderRadius.circular(20.0),
@@ -157,7 +158,8 @@ class Registro extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Confirm your password',
                       filled: true,
-                      fillColor: Colors.yellow, // Fondo circular azul
+                      fillColor: Colors.yellow,
+                      // Fondo circular azul
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
                         borderRadius: BorderRadius.circular(20.0),
@@ -169,19 +171,37 @@ class Registro extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-
-                  if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 0){
-
-                    mostrarAlerta(context, 'Usuario creado');
-                    registrarUsuario();
-                    Navigator.push(context,MaterialPageRoute(builder: (context) => LoginApp()),);
-                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 1){
-                    mostrarAlerta(context ,'Los campos no pueden estar vacios');
-                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 2){
-                    mostrarAlerta(context,'Este email ya esta registrado');
-                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 3){
-                    mostrarAlerta(context, 'Las contraseñas no coinciden');
+                onPressed: () async {
+                  if (validarNuevoUsuario(
+                      _emailController.text,
+                      _passwordController.text,
+                      _confirmPasswordController.text) ==
+                      0) {
+                    if (await registerUser()) {
+                      mostrarAlerta(context, 'Usuario creado');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginApp()),
+                      );
+                    }
+                  } else if (validarNuevoUsuario(
+                      _emailController.text,
+                      _passwordController.text,
+                      _confirmPasswordController.text) ==
+                      1) {
+                    mostrarAlerta(context, 'Los campos no pueden estar vacios');
+                  } else if (validarNuevoUsuario(
+                      _emailController.text,
+                      _passwordController.text,
+                      _confirmPasswordController.text) ==
+                      2) {
+                    mostrarAlerta(context, 'Este email ya esta registrado');
+                  } else if (validarNuevoUsuario(
+                      _emailController.text,
+                      _passwordController.text,
+                      _confirmPasswordController.text) ==
+                      3) {
+                    mostrarAlerta(context, 'Las contraseÃ±as no coinciden');
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -191,7 +211,8 @@ class Registro extends StatelessWidget {
                   ),
                 ),
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  padding:
+                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Text(
                     'Registrarse',
                     style: TextStyle(
