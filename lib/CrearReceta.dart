@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -9,12 +10,46 @@ class CrearReceta extends StatefulWidget {
   final Function(Receta? reciper) onRecipeAdded;
 
   @override
-  State<CrearReceta> createState() => _ThirdScreenState();
+  State<CrearReceta> createState() => _CrearRecetaState();
 }
 
-class _ThirdScreenState extends State<CrearReceta> {
+class _CrearRecetaState extends State<CrearReceta> {
   TextEditingController _recipeNameController = TextEditingController();
   TextEditingController _recipeDescriptionController = TextEditingController();
+  final firebase = FirebaseFirestore.instance;
+
+  void registrarReceta() async {
+    try {
+      await firebase.collection('Recetas').doc().set(
+        {
+          "Email": _recipeNameController.text,
+          "Password": _recipeDescriptionController.text,
+        },
+      );
+    } catch (e) {
+      print("Error" + e.toString());
+    }
+  }
+
+  void mostrarAlerta(BuildContext context, String mensaje) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Alerta'),
+          content: Text(mensaje),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra la alerta
+              },
+              child: Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +72,7 @@ class _ThirdScreenState extends State<CrearReceta> {
               const SizedBox(height: 12),
               TextField(
                 controller: _recipeDescriptionController,
+                maxLines: 5, // Ajusta el número de líneas según tus necesidades
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Recipe Description',
@@ -45,7 +81,16 @@ class _ThirdScreenState extends State<CrearReceta> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  _saveRecipe();
+                  if(_recipeNameController.text.isNotEmpty && _recipeDescriptionController.text.isNotEmpty){
+                    registrarReceta();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Recetas()),
+                    );
+                  }else{
+                    mostrarAlerta(context, "El nombre o descripcion no pueden estar vacios");
+                  }
+
                 },
                 child: const Text('Add Recipe'),
               ),
@@ -54,15 +99,5 @@ class _ThirdScreenState extends State<CrearReceta> {
         ),
       ),
     );
-  }
-
-  _saveRecipe() {
-    var name = _recipeNameController.text;
-    var description = _recipeDescriptionController.text;
-    if (name.isNotEmpty && description.isNotEmpty) {
-      widget.onRecipeAdded(Receta(name: name, description: description));
-      Navigator.pop(context);
-      // Navigator.pop(context, Recipe(name: name, description: description));
-    }
   }
 }

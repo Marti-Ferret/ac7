@@ -1,8 +1,6 @@
 import 'dart:js';
 import 'dart:js_interop';
 import 'package:flutter/material.dart';
-
-
 import 'package:ac7test/my_app.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +35,8 @@ class Registro extends StatelessWidget {
 
     return false;
   }
+
+
   void mostrarAlerta(BuildContext context, String mensaje) {
     showDialog(
       context: context,
@@ -55,6 +55,21 @@ class Registro extends StatelessWidget {
         );
       },
     );
+  }
+  int validarNuevoUsuario(String email, String password, String validatePassword){
+    if(_passwordController.text.isEmpty || _emailController.text.isEmpty){
+      return 1;
+    }else {
+      if (_passwordController.text == _confirmPasswordController.text) {
+        if (!usuarioExiste(_emailController.text)) {
+          return 0;
+        } else {
+          return 2;
+        }
+      } else {
+        return 3;
+      }
+    }
   }
 
   void registrarUsuario() async{
@@ -155,24 +170,18 @@ class Registro extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  if(_passwordController.text.isEmpty || _emailController.text.isEmpty){
-                    mostrarAlerta(context, 'La contraseña o el email no puede estar vacio');
-                  }else {
-                    if (_passwordController.text == _confirmPasswordController.text) {
-                      if (!usuarioExiste(_emailController.text)) {
-                        mostrarAlerta(context, 'Usuario creado');
-                        registrarUsuario();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginApp()),
-                        );
-                      } else {
-                        mostrarAlerta(context,
-                            'Este email ya esta registrado, usuario no creado');
-                      }
-                    } else {
-                      mostrarAlerta(context, 'Las contraseñas no coinciden');
-                    }
+
+                  if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 0){
+
+                    mostrarAlerta(context, 'Usuario creado');
+                    registrarUsuario();
+                    Navigator.push(context,MaterialPageRoute(builder: (context) => LoginApp()),);
+                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 1){
+                    mostrarAlerta(context ,'Los campos no pueden estar vacios');
+                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 2){
+                    mostrarAlerta(context,'Este email ya esta registrado');
+                  }else if(validarNuevoUsuario(_emailController.text, _passwordController.text, _confirmPasswordController.text) == 3){
+                    mostrarAlerta(context, 'Las contraseñas no coinciden');
                   }
                 },
                 style: ElevatedButton.styleFrom(
