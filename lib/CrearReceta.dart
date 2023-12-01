@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -13,20 +14,26 @@ class _CrearRecetaState extends State<CrearReceta> {
   TextEditingController _recipeDescriptionController = TextEditingController();
   String _selectedCategory = 'Pizza';
   final firebase = FirebaseFirestore.instance;
+  final firebaseAuth = FirebaseAuth.instance;
 
   void createRecipe() async {
     try {
+      User? user = await getCurrentUser();
       await firebase.collection('Recetas').doc().set(
         {
           "Nombre": _recipeNameController.text,
           "Descripcion": _recipeDescriptionController.text,
           "Categoria": _selectedCategory,
+          "Creador": user?.email
         },
       );
     } catch (e) {
       print("Error" + e.toString());
     }
   }
+    Future<User?> getCurrentUser() async {
+      return FirebaseAuth.instance.currentUser;
+    }
 
   void mostrarAlerta(BuildContext context, String mensaje) {
     showDialog(

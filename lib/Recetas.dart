@@ -31,11 +31,13 @@ class _RecetasState extends State<Recetas> {
         final name = data["Nombre"];
         final description = data["Descripcion"];
         final tipo = data["Categoria"];
+        final creator = data["Creador"];
 
         recipes.add(Recipe(
           name: name,
           description: description,
-          tipo: tipo,
+          type: tipo,
+          creator: creator
         ));
       }
     } catch (e) {
@@ -77,6 +79,7 @@ class _RecetasState extends State<Recetas> {
 
   @override
   Widget build(BuildContext context) {
+    getRecipes();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -127,7 +130,7 @@ class _RecetasState extends State<Recetas> {
                               children: [
                                 AspectRatio(
                                   aspectRatio: 18.0 / 11.0,
-                                  child: Image.asset(getImagePath(recipes[index].tipo)),
+                                  child: Image.asset(getImagePath(recipes[index].type)),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.all(8.0),
@@ -161,8 +164,9 @@ class _RecetasState extends State<Recetas> {
 class Recipe {
   final String name;
   final String description;
-  final String tipo;
+  final String type;
+  final String creator;
 
-  const Recipe({required this.name, required this.description, required this.tipo});
+  const Recipe({required this.name, required this.description, required this.type, required this.creator});
 }
 
