@@ -1,7 +1,10 @@
+import 'package:ac7test/my_app.dart';
 import 'package:ac7test/recipe_details.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'Controller_Shared.dart';
 import 'CrearReceta.dart';
 
 class Recetas extends StatefulWidget {
@@ -13,9 +16,14 @@ class _RecetasState extends State<Recetas> {
   final firebase = FirebaseFirestore.instance;
   late Future<List<Recipe>> recipesFuture;
 
+  late Controller_Shared controller_shared;
+
+
   @override
-  void initState() {
+  void initState(){
     super.initState();
+    controller_shared = Controller_Shared();
+    controller_shared.initialize();
     recipesFuture = getRecipes();
   }
 
@@ -24,7 +32,7 @@ class _RecetasState extends State<Recetas> {
 
     try {
       final QuerySnapshot querySnapshot =
-      await firebase.collection("Recetas").get();
+          await firebase.collection("Recetas").get();
 
       for (QueryDocumentSnapshot doc in querySnapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
@@ -34,11 +42,10 @@ class _RecetasState extends State<Recetas> {
         final creator = data["Creador"];
 
         recipes.add(Recipe(
-          name: name,
-          description: description,
-          type: tipo,
-          creator: creator
-        ));
+            name: name,
+            description: description,
+            type: tipo,
+            creator: creator));
       }
     } catch (e) {
       print("Error getting documents: $e");
@@ -82,16 +89,29 @@ class _RecetasState extends State<Recetas> {
     getRecipes();
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Recetas',
           textAlign: TextAlign.center,
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.logout, color: Colors.red),
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            await controller_shared.deleteShared('email');
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => LoginApp()),
+            );
+          },
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add, color: Colors.lightBlue),
             onPressed: () {
               Navigator.push(
-                context, MaterialPageRoute(builder: (context) => CrearReceta()),
+                context,
+                MaterialPageRoute(builder: (context) => CrearReceta()),
               );
             },
           ),
@@ -114,7 +134,9 @@ class _RecetasState extends State<Recetas> {
                 children: [
                   Expanded(
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      padding: const EdgeInsets.all(10.0),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 1.0,
                       ),
@@ -130,16 +152,28 @@ class _RecetasState extends State<Recetas> {
                               children: [
                                 AspectRatio(
                                   aspectRatio: 18.0 / 11.0,
-                                  child: Image.asset(getImagePath(recipes[index].type)),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20.0),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(10.0),
+                                      child: Image.asset(
+                                        getImagePath(recipes[index].type),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.all(8.0),
+                                Container(
+                                  padding: const EdgeInsets.all(8.0),
                                   child: Card(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Text(
-                                        recipes[index].name,
-                                        style: TextStyle(fontSize: 14.0),
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          recipes[index].name,
+                                          style:
+                                              const TextStyle(fontSize: 14.0),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -167,6 +201,9 @@ class Recipe {
   final String type;
   final String creator;
 
-  const Recipe({required this.name, required this.description, required this.type, required this.creator});
+  const Recipe(
+      {required this.name,
+      required this.description,
+      required this.type,
+      required this.creator});
 }
-

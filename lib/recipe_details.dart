@@ -28,7 +28,9 @@ class RecipeDetailsPage extends StatelessWidget {
         return 'assets/images/otro.jpg';
     }
   }
-  Future<String?> findRecipeId(String recipeName, String description, String type) async {
+
+  Future<String?> findRecipeId(
+      String recipeName, String description, String type) async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Recetas')
@@ -53,10 +55,36 @@ class RecipeDetailsPage extends StatelessWidget {
   Future<User?> getCurrentUser() async {
     return FirebaseAuth.instance.currentUser;
   }
-  Future<void> deleteRecipe(String recipeId) async {
+
+  Future<void> deleteRecipe(BuildContext context,String recipeId) async {
     try {
-      await FirebaseFirestore.instance.collection('Recetas').doc(recipeId).delete();
-      print('Receta eliminada correctamente');
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Eliminar receta'),
+            content: const Text('¿Estás seguro de que quieres eliminar esta receta?'),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('Recetas')
+                      .doc(recipeId)
+                      .delete();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Sí'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('No'),
+              ),
+            ],
+          );
+        },
+      );
     } catch (e) {
       print('Error al eliminar la receta: $e');
       // Puedes manejar el error de alguna manera, por ejemplo, mostrando un mensaje al usuario
@@ -67,6 +95,7 @@ class RecipeDetailsPage extends StatelessWidget {
     User? user = await getCurrentUser();
     return user?.email;
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,21 +106,22 @@ class RecipeDetailsPage extends StatelessWidget {
           FutureBuilder<String?>(
             future: getCurrentEmail(),
             builder: (context, snapshot) {
-
-                if (snapshot.hasData && recipe.creator == snapshot.data) {
-                  return IconButton(
-                    onPressed: () async {
-                      String? id = await findRecipeId(recipe.name,recipe.description,recipe.type);
-                      await deleteRecipe(id!);
-                      Navigator.push(
-                        context, MaterialPageRoute(builder: (context) => Recetas()),
-                      );
-                    },
+              if (snapshot.hasData && recipe.creator == snapshot.data) {
+                return IconButton(
+                  onPressed: () async {
+                    String? id = await findRecipeId(
+                        recipe.name, recipe.description, recipe.type);
+                    await deleteRecipe(context,id!);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Recetas()),
+                    );
+                  },
                   icon: Icon(Icons.delete),
-                  );
-                } else {
-                  return Container();
-                }
+                );
+              } else {
+                return Container();
+              }
             },
           ),
         ],
@@ -119,4 +149,4 @@ class RecipeDetailsPage extends StatelessWidget {
       ),
     );
   }
-  }
+}
